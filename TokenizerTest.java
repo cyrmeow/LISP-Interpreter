@@ -1,6 +1,6 @@
-package core;
+package lisp;
 
-import static core.TokenKind.ERROR;
+import static lisp.TokenKind.ERROR;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -9,7 +9,7 @@ import java.util.Scanner;
 /**
  * Part 1 of Project 1 for CSE 3341. Test a Tokenizer for Core.
  *
- * @author Wayne D. Heym
+ * @author Yiran Cao
  *
  */
 public final class TokenizerTest {
@@ -28,8 +28,9 @@ public final class TokenizerTest {
      */
     public static void main(String[] args) {
         Scanner in;
-
+        // System.out.println(Integer.parseInt("-42"));
         try {
+            // in = new Scanner("(2 . (3 . (4 . NIL)))");
             in = new Scanner(Paths.get(args[0]));
         } catch (IOException e) {
             System.err.println("Error opening file: " + args[0]);
@@ -37,12 +38,14 @@ public final class TokenizerTest {
         }
         Tokenizer t = MyTokenizer.create(in);
         while (t.getToken() != ERROR) {
-            System.out.println(t.getToken().testDriverTokenNumber());
+            System.out.println(t.getToken().getTokenNumber());
             if(t.getToken() == TokenKind.EOF) break;
             t.skipToken();
         }
         if (t.getToken() == ERROR) {
             System.out.println("Error: Illegal token encountered.");
+            in.close();
+            System.exit(0);
         }
         /*
          * Close input stream
