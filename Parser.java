@@ -70,7 +70,6 @@ public class Parser {
 				if(this.tokenizer.getToken() != TokenKind.RIGHT_PARENTHESIS) {
 					throw new UnexpectedTokenException("Error: unexpected token: " + this.tokenizer.getToken().toString());
 				}
-				
 				this.tokenizer.skipToken(); // skip ")"
 			} else {
 				try{
@@ -128,15 +127,27 @@ public class Parser {
 	}
 
 	public void output() {
+		boolean first = true;
 		while(this.tokenizer.getToken() != TokenKind.EOF) {
 			SExp out;
 			try{
 				out = input();
+				first = false;
+				if(this.tokenizer.getToken() == TokenKind.SPACE) this.tokenizer.skipToken();
+
+				if (this.tokenizer.getToken() != TokenKind.DOLLAR) {
+					// if the top level s-exp is not followed by a $, print error message and skip to next $
+					System.out.println("Error: unexpected token " + this.tokenizer.getToken().toString());
+					skipLine();
+					this.tokenizer.skipToken();
+					continue;
+				}
 				System.out.println("> " + out.toString());
 			} catch (UnexpectedTokenException e) {
 				this.tokenizer.skipToken();
 				System.out.println(e.getMessage());
 			}
+
 
 			skipLine();
 			

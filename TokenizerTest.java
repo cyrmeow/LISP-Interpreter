@@ -31,12 +31,12 @@ public final class TokenizerTest {
         // System.out.println(Integer.parseInt("-42"));
         try {
             // in = new Scanner("(2 . (3 . (4 . NIL)))");
-            in = new Scanner(Paths.get(args[0]));
+            in = new Scanner(Paths.get(args[0])).useDelimiter("");
         } catch (IOException e) {
             System.err.println("Error opening file: " + args[0]);
             return;
         }
-        Tokenizer t = MyTokenizer.create(in);
+        Tokenizer t = LispTokenizer.create(in);
         while (t.getToken() != ERROR) {
             System.out.println(t.getToken().getTokenNumber());
             if(t.getToken() == TokenKind.EOF) break;
@@ -47,13 +47,24 @@ public final class TokenizerTest {
             in.close();
             System.exit(0);
         }
+        in.close();
         /*
          * Close input stream
          */
 
-        // *******************test code******************* //
+        // *******************test code******************* /
+        // try {
+        //     // in = new Scanner("(2 . (3 . (4 . NIL)))");
+        //     in = new Scanner(Paths.get(args[0])).useDelimiter("");
+        // } catch (IOException e) {
+        //     System.err.println("Error opening file: " + args[0]);
+        //     return;
+        // }
+        // while(in.hasNext()) {
+        //     System.out.println(in.next());
+        // }
         
-        in.close();
+        // in.close();
     }
 
 }
