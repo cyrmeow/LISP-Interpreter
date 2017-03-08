@@ -44,8 +44,11 @@ public class Parser {
 			}
 		}
 	}
-	private SExp input() {
-		if (this.tokenizer.getToken() == TokenKind.INTEGER) {
+	private SExp input() throws UnexpectedTokenException {
+		if(this.tokenizer.getToken() == TokenKind.SPACE) {
+			this.tokenizer.skipToken(); // skip space
+			return input();
+		} else if (this.tokenizer.getToken() == TokenKind.INTEGER) {
 			SExp atomInt = new SExp(1, this.tokenizer.intVal());
 			this.tokenizer.skipToken(); // skip integer
 			return atomInt;
@@ -56,35 +59,58 @@ public class Parser {
 		} else if (this.tokenizer.getToken() == TokenKind.LEFT_PARENTHESIS) {
 			this.tokenizer.skipToken(); // skip "("
 			SExp left = input();
-			SExp right;
+			// skipping unnecessary spaces after left child
+			while (this.tokenizer.getToken() == TokenKind.SPACE) this.tokenizer.skipToken();
+			SExp right = null;
 			if (this.tokenizer.getToken() == TokenKind.DOT) {
 				this.tokenizer.skipToken(); // skip "."
 				right = input();
+				// skipping unnecessary whitespaces after right child
+				while (this.tokenizer.getToken() == TokenKind.SPACE) this.tokenizer.skipToken();
 				if(this.tokenizer.getToken() != TokenKind.RIGHT_PARENTHESIS) {
-					System.out.println("Error: unexpected token: " + this.tokenizer.getToken());
-					// System.exit(0);
-					return null;
+					throw new UnexpectedTokenException("Error: unexpected token: " + this.tokenizer.getToken().toString());
 				}
+				
 				this.tokenizer.skipToken(); // skip ")"
 			} else {
-				right = input2();
+				try{
+					right = input2();
+				} catch (UnexpectedTokenException e) {
+					throw new UnexpectedTokenException(e.getMessage());
+				}
 			}
-
 			return cons(left, right);
 		} else {
-			System.out.println("Error: unexpected token: " + this.tokenizer.getToken());
-			return null;
+			throw new UnexpectedTokenException("Error: unexpected token: " + this.tokenizer.getToken().toString());
 		}
 	}
 
-	private SExp input2() {
-		if(this.tokenizer.getToken() == TokenKind.RIGHT_PARENTHESIS) {
+	private SExp input2() throws UnexpectedTokenException {
+		if(this.tokenizer.getToken() == TokenKind.SPACE) {
+			this.tokenizer.skipToken(); //skip whitespace
+			return input2();
+		} else if(this.tokenizer.getToken() == TokenKind.RIGHT_PARENTHESIS) {
 			this.tokenizer.skipToken(); // skip ")"
+			while(this.tokenizer.getToken() == TokenKind.SPACE) this.tokenizer.skipToken();
 			return getId("NIL");
 		} else {
-			SExp left = input();
-			SExp right = input2();
-			SExp newlist = cons(left, right);
+			SExp left;
+			try{
+				left = input();
+			} catch (UnexpectedTokenException e) {
+				throw new UnexpectedTokenException(e.getMessage());
+			}
+			while (this.tokenizer.getToken() == TokenKind.SPACE) this.tokenizer.skipToken();
+
+			SExp right;
+			SExp newlist = null;
+			try{ 
+				right = input2();
+			} catch (UnexpectedTokenException e) {
+				throw new UnexpectedTokenException(e.getMessage());
+			}
+			newlist = cons(left, right);
+			while (this.tokenizer.getToken() == TokenKind.SPACE) this.tokenizer.skipToken();
 			return newlist;
 		}
 	}
@@ -103,17 +129,32 @@ public class Parser {
 
 	public void output() {
 		while(this.tokenizer.getToken() != TokenKind.EOF) {
-			
-			SExp out = input();
-			if (out != null) {
-				System.out.println(out);
+			SExp out;
+			try{
+				out = input();
+				System.out.println("> " + out.toString());
+			} catch (UnexpectedTokenException e) {
+				this.tokenizer.skipToken();
+				System.out.println(e.getMessage());
 			}
 
 			skipLine();
 			
 			this.tokenizer.skipToken();
-			if(this.tokenizer.getToken() == TokenKind.DOLLAR) break;
+			if(this.tokenizer.getToken() == TokenKind.DOLLAR) {
+				System.out.println("> Bye!");
+				break;
+			}
 		} 
 	}
 
+}
+
+class UnexpectedTokenException extends Exception{
+    public UnexpectedTokenException(){
+        super();
+    }
+    public UnexpectedTokenException(String msg){
+        super(msg);
+    }
 }

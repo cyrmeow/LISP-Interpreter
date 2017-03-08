@@ -14,8 +14,9 @@ enum TokenKind {
     INTEGER(4),
     IDENTIFIER(5),
     DOLLAR(6),
-    ERROR(7),
-    EOF(8);
+    SPACE(7),
+    ERROR(8),
+    EOF(9);
 
 
     /**

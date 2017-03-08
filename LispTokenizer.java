@@ -14,142 +14,114 @@ class LispTokenizer implements Tokenizer {
 	private static String sign = "+-";
 	
 	private Scanner src;
-	private int entry;
-	private int end;
-	private String line;
-
+	private String cur;
 	private int int_token_value;
 	private String id_token_name;
 
+	private TokenKind curTokenKind;
 	
 	private LispTokenizer(Scanner in) {
 		this.src = in;
-		this.entry = 0;
-		this.end = 0;
-		this.line = null;
 		this.int_token_value = 0;
 		this.id_token_name = null;
+		this.cur = "";
+		this.skipToken();
 	}
 	public static LispTokenizer create(Scanner in) {
 		return new LispTokenizer(in);
 	}
 
-	public TokenKind getToken(){
-		// if it's the start of the program and has seen no lines
-		if (this.line == null) {
-			if (this.src.hasNextLine()) {
-				this.line = this.src.nextLine();
-				this.entry = 0;
-			} else {
-				return TokenKind.EOF;
-			}
-		}
-
-		this.end = this.entry + 1;
-
-		// check if encountered with EOF
-		while(this.line.length() == 0) {
-			if(!this.src.hasNextLine()){
-				return TokenKind.EOF;
-			} else {
-				this.line = this.src.nextLine();
-			}
-		}
-
-		if(this.entry == this.line.length() && !this.src.hasNextLine()) {
-			return TokenKind.EOF;
-		}
-
-		String first = this.line.substring(this.entry, this.end);
-
-		/* ---------------------------------------- automaton ---------------------------------------- */
-
-		// skipping whitespaces
-		while (whitespaces.contains(first)) {
-			this.entry ++;
-			this.end ++;
-			if (this.end >= this.line.length()) {
-				if (!this.src.hasNextLine()) {
-					return TokenKind.EOF;
-				} else {
-					this.line = this.src.nextLine();
-					while(this.line.length() == 0) {
-						if(!this.src.hasNextLine()){
-							return TokenKind.EOF;
-						} else {
-							this.line = this.src.nextLine();
-						}
-					}
-					this.entry = 0;
-					this.end = 1;
-				}
-			}
-			first = this.line.substring(this.entry, this.end);
-		}
-
-		if(!src.hasNextLine() && this.entry == this.line.length()) {
-			// EOF
-			return TokenKind.EOF;
-		} else if (first.equals("(")) {
-			// LEFT PARENTHESIS
-			return TokenKind.LEFT_PARENTHESIS;
-		}else if (first.equals(")")) {
-			// RIGHT PARENTHESIS
-			return TokenKind.RIGHT_PARENTHESIS;
-		} else if (first.equals(".")) {
-			// DOT
-			return TokenKind.DOT;
-		} else if (first.equals("$")) {
-			// DOLLAR
-			return TokenKind.DOLLAR;
-		} else if (uppercase.contains(first)) {
-			// IDENTIFIER
-			while (this.end < this.line.length()) {
-				if (lowercase.contains(this.line.substring(this.end, this.end + 1))) {
-					return TokenKind.ERROR;
-				} else if (uppercase.contains(this.line.substring(this.end, this.end + 1)) || digits.contains(this.line.substring(this.end, this.end + 1))) {
-					this.end ++;
-				} else {
-					break;
-				}
-			}
-			this.id_token_name = this.line.substring(this.entry, this.end);
-			return TokenKind.IDENTIFIER;
-		} else if (digits.contains(first) || sign.contains(first)) {
-			// INTEGER
-			if(sign.contains(first) && !digits.contains(this.line.substring(this.end, this.end + 1))) {
-				return TokenKind.ERROR;
-			}
-			while(this.end < this.line.length()) {
-				if(digits.contains(this.line.substring(this.end, this.end + 1))) {
-					this.end ++;
-				} else if (uppercase.contains(this.line.substring(this.end, this.end + 1)) 
-					|| lowercase.contains(this.line.substring(this.end, this.end + 1))) {
-					
-					return TokenKind.ERROR;
-				} else {
-					break;
-				}
-			}
-			this.int_token_value = Integer.parseInt(this.line.substring(this.entry, this.end));
-			return TokenKind.INTEGER;
-		} else {
-			return TokenKind.ERROR;
-		}
+	public TokenKind getToken() {
+		return curTokenKind;
 	}
-
 	public void skipToken(){
-		if (this.end == this.line.length()) {
-			if(this.src.hasNextLine()) {
-				this.line = this.src.nextLine();
-				this.entry = 0;
-			} else {
-				this.entry = this.end;
-			}
-			
+		if (cur.equals("") && !src.hasNext()) {
+			this.curTokenKind = TokenKind.EOF;
 		} else {
-			this.entry = this.end;
+			if(cur.equals("")) {
+				cur = src.next();
+			}
+
+			// The Automaton for LISP
+			if (cur.equals("(")) {
+				cur = "";
+				this.curTokenKind = TokenKind.LEFT_PARENTHESIS;
+			} else if (cur.equals(")")) {
+				cur = "";
+				this.curTokenKind = TokenKind.RIGHT_PARENTHESIS;
+			} else if (cur.equals(".")) {
+				cur = "";
+				this.curTokenKind = TokenKind.DOT;
+			} else if (cur.equals("$")) {
+				cur = "";
+				this.curTokenKind = TokenKind.DOLLAR;
+			} else if (sign.contains(cur) || digits.contains(cur)) {
+				StringBuffer buffer = new StringBuffer(cur);
+				boolean updated = false;
+				while(src.hasNext()) {
+					cur = src.next();
+					if (digits.contains(cur)) {
+						buffer.append(cur);
+					} else if (uppercase.contains(cur) || lowercase.contains(cur) || sign.contains(cur)) {
+						updated = true;
+						this.curTokenKind = TokenKind.ERROR;
+						break;
+					} else {
+						updated = true;
+						this.int_token_value = Integer.parseInt(new String(buffer));
+						this.curTokenKind = TokenKind.INTEGER;
+						break;
+					}
+				}
+
+				if(!updated){
+					cur = "";
+					this.int_token_value = Integer.parseInt(new String(buffer));
+					this.curTokenKind = TokenKind.INTEGER;
+				}
+			} else if (uppercase.contains(cur) || lowercase.contains(cur)) {
+				StringBuffer buffer = new StringBuffer(cur);
+				boolean updated = false;
+				while(src.hasNext()) {
+					cur = src.next();
+					if (digits.contains(cur) || uppercase.contains(cur) || lowercase.contains(cur)) {
+						buffer.append(cur);
+					} else if (sign.contains(cur)) {
+						updated = true;
+						this.curTokenKind = TokenKind.ERROR;
+						break;
+					} else {
+						updated = true;
+						this.id_token_name = new String(buffer).toUpperCase();
+						this.curTokenKind = TokenKind.IDENTIFIER;
+						break;
+					}
+				}
+				if(!updated) {
+					cur = "";
+					this.id_token_name = new String(buffer).toUpperCase();
+					this.curTokenKind = TokenKind.IDENTIFIER;
+				}
+			} else if (whitespaces.contains(cur)) {
+				boolean updated = false;
+				while(src.hasNext()) {
+					cur = src.next();
+					if (!whitespaces.contains(cur)) {
+						updated = true;
+						this.curTokenKind = TokenKind.SPACE;
+						break;
+					}
+				}
+				if(!updated) {
+					cur = "";
+					this.curTokenKind = TokenKind.SPACE;
+				}
+			} else {
+				this.curTokenKind = TokenKind.ERROR;
+			}
 		}
+
+		
 	}
 
 	public int intVal() {
