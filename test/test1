@@ -1,0 +1,1 @@
+(cons (QUOTE A) (quote b))

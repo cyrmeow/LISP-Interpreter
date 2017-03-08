@@ -1,4 +1,5 @@
 # README
+*Author: Yiran Cao*
 
 ## Description
 This is the first part of the Lisp interpreter project, the input and output routines. The program takes its input, which should be an S-expression in the form of either list, dotted or mixed notation, from standard input, and outputs the dotted notation of that S-expression to standard output.

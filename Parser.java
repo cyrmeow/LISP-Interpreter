@@ -1,6 +1,13 @@
+
 package lisp;
 import java.util.*;
 
+/**
+ * Parser for core, currently handling only input and output
+ *
+ * @author Yiran Cao
+ *
+ */
 public class Parser {
 	private LispTokenizer tokenizer;
 	private static ArrayList<SExp> existSymbol;
@@ -58,6 +65,10 @@ public class Parser {
 			return atomSymbol;
 		} else if (this.tokenizer.getToken() == TokenKind.LEFT_PARENTHESIS) {
 			this.tokenizer.skipToken(); // skip "("
+			if (this.tokenizer.getToken() == TokenKind.RIGHT_PARENTHESIS) {
+				this.tokenizer.skipToken(); // skip ")"
+				return getId("NIL");
+			}
 			SExp left = input();
 			// skipping unnecessary spaces after left child
 			while (this.tokenizer.getToken() == TokenKind.SPACE) this.tokenizer.skipToken();

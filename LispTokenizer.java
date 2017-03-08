@@ -1,9 +1,14 @@
-// Author: Yiran Cao.805
-
 package lisp;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
+
+/**
+ * Tokenizer for Lisp
+ *
+ * @author Yiran Cao
+ *
+ */
 
 class LispTokenizer implements Tokenizer {
 
