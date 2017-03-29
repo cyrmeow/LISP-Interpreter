@@ -11,7 +11,7 @@ CLASSES = \
         TokenizerTest.java \
         sexpression.java \
         Parser.java \
-        Parsertest.java
+        Interpreter.java
         
        	 
 

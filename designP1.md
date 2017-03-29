@@ -43,5 +43,35 @@ The method of parsing < rest > is implemented as input2(), following the steps b
 ## Output
 The output routine simply outputs every legal s-expression in the input stream, as well as any error message, to the standard output.
 
+## Evaluation
+
+The evaluation process is simply implemented in lisp style, borrowing most of the ideas from the class note, "transtating" the lisp expressions into java language.
+
+### a-list and d-list
+The a-list and d-list are two static object of the `SExp` class. When a new function is defined, the d-list is updated, taking the newly defined function as its car and the old d-list as its cdr. When a the `apply()` method is called, the a-list will be updated, adding the latest bindings to the head of the a-list.
+
+### Reserved Symbolic S-expressions
+
+#### Reserved Symbolic Atoms
+`NIL` and `T` are two reserved sybolic atoms, which I implemented as two static variables `SExp t` and `SExp nil`
+
+#### Reserved Function Names (Primitive Functions)
+Primitive functions are pre-implemented in java, without being added to the d-list. When the user called a function, the interpreter will first check if it's a primitive function. If the user attempts to define a function in the name of a primitive function, the interpreter will not allow the definition and give a runtime error.
+
+### Evaluation
+
+#### Atoms
+
+If the S-expression is an integer atom, the interprer will evaluates it as itself. If it's a symbolic atom, the interpreter will first check if it's a `T` or `NIL`, if it's not `T` or `NIL`, the interpreter will try to find the bindings in the a-List, giving errors if it's an unbound variable.
+
+#### Special forms
+
+If the car of the S-expression is one of the three special forms, QUOTE, COND, or DEFUN, the interpreter will call the corresponding evaluation function to evalutate it.
+
+#### Function Applications
+
+If the car of the S-expression is neither one of the three special forms, nor an atom, it will be treated as a function application. The interpreter will try to evaluate each of the arguements, then evaluates the outermost function application. If the function name is not found in the d-list, or the length of the arguement list is not same as the parameter list, or one of its arguements evaluation encounters an error, the evaluation won't succeed.
+
+
 ## Handling Errors
-During the parsing process, if the parser encounters any unexpected tokens, it will throw an exception. The output routine will catch it and print the error message.
+During the interpreting process, if the interpreter encounters any unexpected tokens during the input stage, or encounters any error during the evaluation stage, it will throw an exception. The output routine will catch it and print the error message.

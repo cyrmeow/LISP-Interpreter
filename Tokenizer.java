@@ -11,7 +11,7 @@ interface Tokenizer {
 
 
     /**
-     * Return the kind of the front token. 
+     * Return the kind of the front token.
      */
     TokenKind getToken();
 
